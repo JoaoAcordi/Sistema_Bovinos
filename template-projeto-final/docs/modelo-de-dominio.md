@@ -1,85 +1,109 @@
 # Modelo de domínio
 
-> No mínimo **3 entidades** e pelo menos **um relacionamento**. As linhas marcadas com *(exemplo)* mostram o nível de detalhe esperado: apague e escreva as do grupo.
+Documentação das entidades, atributos, relacionamentos, diagrama de entidade-relacionamento e migrations do BoiChip.
 
 ## Entidades
 
-Uma tabela por entidade. A coluna **Regra** é o que vira `NOT NULL`, `UNIQUE` ou validação no DTO.
+### Piquete
 
-### Livro *(exemplo)*
-
-Um exemplar do acervo que pode ser emprestado.
+Uma área de pasto da fazenda com capacidade máxima delimitada de animais para manejo e rotação.
 
 | Atributo | Tipo Java | Coluna | Obrigatório | Regra |
 |---|---|---|---|---|
-| `id` | `Long` | `id` | sim | Gerado pelo banco |
-| `titulo` | `String` | `titulo` | sim | Até 255 caracteres |
-| `isbn` | `String` | `isbn` | sim | Até 20 caracteres. Não é único: exemplares do mesmo título repetem o ISBN |
-| `disponivel` | `boolean` | `disponivel` | sim | Nasce `true`; o cliente não controla |
+| `id` | `Long` | `id` | sim | Gerado pelo banco (IDENTITY) |
+| `nome` | `String` | `nome` | sim | Não vazio, até 255 caracteres |
+| `capacidadeMaxima` | `Integer` | `capacidade_maxima` | sim | Mínimo 1 |
 
-### {{Entidade 2}}
+### Boi
 
-{{O que ela representa, em uma linha.}}
-
-| Atributo | Tipo Java | Coluna | Obrigatório | Regra |
-|---|---|---|---|---|
-| `id` | `Long` | `id` | sim | Gerado pelo banco |
-| ... | ... | ... | ... | ... |
-
-### {{Entidade 3}}
-
-{{O que ela representa, em uma linha.}}
+Um animal do rebanho, identificado univocamente pelo número do microchip implantado.
 
 | Atributo | Tipo Java | Coluna | Obrigatório | Regra |
 |---|---|---|---|---|
-| `id` | `Long` | `id` | sim | Gerado pelo banco |
-| ... | ... | ... | ... | ... |
+| `id` | `Long` | `id` | sim | Gerado pelo banco (IDENTITY) |
+| `microchip` | `String` | `microchip` | sim | Único (`UNIQUE`), até 50 caracteres |
+| `raca` | `String` | `raca` | sim | Não vazia, até 100 caracteres |
+| `dataNascimento` | `LocalDate` | `data_nascimento` | sim | Não pode ser no futuro |
+| `status` | `StatusBoi` | `status` | sim | `ATIVO`, `VENDIDO`, `ABATIDO` ou `MORTO` (padrão: `ATIVO`) |
+| `piquete` | `Piquete` | `piquete_id` | sim | FK para tabela `piquetes` |
+
+### Pesagem
+
+Registro periódico do peso aferido para acompanhamento do ganho de massa de um animal.
+
+| Atributo | Tipo Java | Coluna | Obrigatório | Regra |
+|---|---|---|---|---|
+| `id` | `Long` | `id` | sim | Gerado pelo banco (IDENTITY) |
+| `boi` | `Boi` | `boi_id` | sim | FK para tabela `bois` |
+| `peso` | `BigDecimal` | `peso` | sim | Maior que zero (`NUMERIC(6,2)`) |
+| `dataPesagem` | `LocalDate` | `data_pesagem` | sim | Não pode ser no futuro |
+
+### Movimentacao
+
+Registro da troca de piquete/pasto de um animal na fazenda.
+
+| Atributo | Tipo Java | Coluna | Obrigatório | Regra |
+|---|---|---|---|---|
+| `id` | `Long` | `id` | sim | Gerado pelo banco (IDENTITY) |
+| `boi` | `Boi` | `boi_id` | sim | FK para tabela `bois` |
+| `piqueteOrigem` | `Piquete` | `piquete_origem_id` | sim | FK para tabela `piquetes` |
+| `piqueteDestino` | `Piquete` | `piquete_destino_id` | sim | FK para tabela `piquetes` |
+| `dataMovimentacao` | `LocalDate` | `data_movimentacao` | sim | Não pode ser no futuro |
+| `motivo` | `String` | `motivo` | sim | Até 255 caracteres |
 
 ## Relacionamentos
 
 | De | Para | Tipo | No banco | No código |
 |---|---|---|---|---|
-| Emprestimo *(exemplo)* | Leitor | muitos para um | `emprestimos.leitor_id` referencia `leitores(id)` | `@ManyToOne` em `Emprestimo` |
-| Emprestimo *(exemplo)* | Livro | muitos para um | `emprestimos.livro_id` referencia `livros(id)` | `@ManyToOne` em `Emprestimo` |
-| ... | ... | ... | ... | ... |
+| Boi | Piquete | muitos para um | `bois.piquete_id` referencia `piquetes(id)` | `@ManyToOne` em `Boi` |
+| Pesagem | Boi | muitos para um | `pesagens.boi_id` referencia `bois(id)` | `@ManyToOne` em `Pesagem` |
+| Movimentacao | Boi | muitos para um | `movimentacoes.boi_id` referencia `bois(id)` | `@ManyToOne` em `Movimentacao` |
+| Movimentacao | Piquete (Origem) | muitos para um | `movimentacoes.piquete_origem_id` referencia `piquetes(id)` | `@ManyToOne` em `Movimentacao` |
+| Movimentacao | Piquete (Destino) | muitos para um | `movimentacoes.piquete_destino_id` referencia `piquetes(id)` | `@ManyToOne` em `Movimentacao` |
 
 ## Diagrama ER
 
-O GitHub desenha o bloco abaixo sozinho. Troque pelas tabelas do grupo, com os nomes das colunas como estarão no banco (`snake_case`).
-
 ```mermaid
 erDiagram
-    LEITORES ||--o{ EMPRESTIMOS : "faz"
-    LIVROS ||--o{ EMPRESTIMOS : "aparece em"
+    PIQUETES ||--o{ BOIS : "abriga"
+    PIQUETES ||--o{ MOVIMENTACOES : "origem/destino de"
+    BOIS ||--o{ PESAGENS : "possui"
+    BOIS ||--o{ MOVIMENTACOES : "realiza"
 
-    LEITORES {
+    PIQUETES {
         bigint id PK
         varchar nome
-        varchar email
+        int capacidade_maxima
     }
-    LIVROS {
+    BOIS {
         bigint id PK
-        varchar titulo
-        varchar isbn
-        boolean disponivel
+        varchar microchip UK
+        varchar raca
+        date data_nascimento
+        varchar status
+        bigint piquete_id FK
     }
-    EMPRESTIMOS {
+    PESAGENS {
         bigint id PK
-        bigint leitor_id FK
-        bigint livro_id FK
-        date data_retirada
-        date data_devolucao
+        bigint boi_id FK
+        numeric peso
+        date data_pesagem
+    }
+    MOVIMENTACOES {
+        bigint id PK
+        bigint boi_id FK
+        bigint piquete_origem_id FK
+        bigint piquete_destino_id FK
+        date data_movimentacao
+        varchar motivo
     }
 ```
 
-Como ler: `||--o{` é "um para muitos". Um leitor faz zero ou vários empréstimos, e cada empréstimo é de exatamente um leitor.
-
 ## Migrations
-
-Todas existem em `src/main/resources/db/migration`, uma tabela por arquivo. A ordem importa: a tabela referenciada nasce antes da que referencia.
 
 | Versão | Arquivo | O que cria |
 |---|---|---|
-| V1 *(exemplo)* | `V1__criar_livros.sql` | Tabela `livros` |
-| V2 *(exemplo)* | `V2__criar_leitores.sql` | Tabela `leitores` |
-| V3 *(exemplo)* | `V3__criar_emprestimos.sql` | Tabela `emprestimos`, com as duas chaves estrangeiras |
+| V1 | `V1__criar_piquetes.sql` | Tabela `piquetes` |
+| V2 | `V2__criar_bois.sql` | Tabela `bois` com chave estrangeira para `piquetes` e microchip `UNIQUE` |
+| V3 | `V3__criar_pesagens.sql` | Tabela `pesagens` com chave estrangeira para `bois` |
+| V4 | `V4__criar_movimentacoes.sql` | Tabela `movimentacoes` com chaves para `bois` e `piquetes` (origem e destino) |
