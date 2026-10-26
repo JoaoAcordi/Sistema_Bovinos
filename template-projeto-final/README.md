@@ -1,27 +1,8 @@
-# {{Nome do Projeto}}
+# BoiChip
 
-> **Este é o ponto de partida do projeto do grupo.** Apague este bloco antes de entregar.
->
-> **Objetivo do exercício:** planejar e organizar um backend antes de programar tudo. O grupo cria o problema e as regras de negócio, desenha o sistema, monta a estrutura de todas as entidades, faz a API funcionar com as regras implementadas e documenta tudo neste README. O enunciado completo está em `Aula 10-11/README.md`, no repositório da disciplina.
->
-> **O que fazer, na ordem:**
->
-> 1. Copie esta pasta inteira para fora do repositório da disciplina, com o nome do projeto, e publique no GitHub. Os comandos estão no enunciado (seção "Como começar pelo template").
-> 2. Procure por `TROQUE` no projeto (`pom.xml`, `docker-compose.yml`, `OpenApiConfig.java`) e coloque o nome do projeto.
-> 3. Preencha a seção [O problema](#o-problema) deste README: o problema que o grupo criou e as regras de negócio.
-> 4. Preencha `docs/modelo-de-dominio.md` e `docs/contrato-da-api.md`.
-> 5. Crie as tabelas e as classes de todas as entidades. O passo a passo está em [src/main/java/api/README.md](src/main/java/api/README.md).
-> 6. Faça a API simples e implemente as regras de negócio.
-> 7. Termine este README: troque tudo o que está entre `{{ }}` e apague o que está marcado com *(exemplo)*. Mantenha as seções e a ordem.
-> 8. Abra o repositório no GitHub, leia o README como quem nunca viu o projeto e preencha `docs/autoavaliacao.md`.
->
-> Na primeira vez que a API sobe, antes de existir tabela e rota, o Flyway avisa `No migrations found` e o Swagger UI mostra `No operations defined in spec!`. É o esperado.
->
-> Os exemplos marcados com *(exemplo)* são de uma biblioteca. O projeto completo dela está em `Aula 10-11/exemplo-biblioteca`.
+API REST para controle do rebanho de uma fazenda de gado de corte por meio do microchip de cada boi: cadastro dos animais, pesagens, troca de piquete e baixa (venda, abate ou morte). Feita para o gestor da fazenda e para o peão de campo que registra o dia a dia do rebanho.
 
-{{Uma ou duas frases: o que o sistema faz e para quem. Quem nunca viu o projeto tem que entender o que ele é lendo só este parágrafo.}}
-
-Projeto Final da disciplina de Backend (Engenharia de Software, SATC). **Etapa 1: arquitetura do backend.**
+Projeto Final da disciplina de Backend (Engenharia de Software, SATC).
 
 ## Índice
 
@@ -39,160 +20,111 @@ Projeto Final da disciplina de Backend (Engenharia de Software, SATC). **Etapa 1
 
 | Nome | GitHub |
 |---|---|
-| {{Nome completo}} | [@{{usuario}}](https://github.com/{{usuario}}) |
-| {{Nome completo}} | [@{{usuario}}](https://github.com/{{usuario}}) |
-| {{Nome completo}} | [@{{usuario}}](https://github.com/{{usuario}}) |
+| JOÃO PEDRO TAUFEMBACH ACORDI | [@JoaoAcordi](https://github.com/JoaoAcordi) |
+| KAUANY HAHN SARTOR | [@kauanysartor](https://github.com/kauanysartor) |
+| RAFAELLA DE SOUZA BENEDET | [@rafinha-benedet](https://github.com/rafinha-benedet) |
 
 ## O problema
 
-**Tema sorteado:** {{tema}}
+**Tema sorteado:** Agronegócio
 
-{{Em 3 a 5 linhas: o problema que o grupo criou dentro do tema, quem sofre com ele hoje e o que o sistema muda.}}
+O controle individual dos animais é um dos pilares de uma fazenda profissional. Do ponto de vista produtivo e financeiro, saber quantos bois a fazenda possui, onde cada um está e quanto pesa permite planejar o melhor momento da venda, dimensionar pastagem e ração e diminuir perdas.
+
+O BoiChip adota o microchip como identidade única de cada animal, centralizando o cadastro, histórico de pesagens e movimentação entre piquetes, garantindo automaticamente as regras de manejo.
 
 **Quem usa o sistema:**
 
 | Quem | O que faz no sistema |
 |---|---|
-| Bibliotecário *(exemplo)* | Cadastra livros e leitores, registra empréstimos e devoluções |
-| ... | ... |
+| Gestor da fazenda | Cadastra piquetes e bois, monitora o rebanho e dá baixa em animais vendidos, abatidos ou mortos |
+| Peão de campo | Registra pesagens e transfere bois entre piquetes a partir do microchip |
 
-**Regras de negócio.** No mínimo 3, criadas pelo grupo a partir do problema: o que o sistema precisa garantir ou impedir. Precisam atender à necessidade do tema e estar implementadas no código. O que só confere formato (campo obrigatório, número positivo) é validação do DTO, não regra de negócio.
+**Regras de negócio:**
 
 | # | Regra | Onde está no código | Rota que usa |
 |---|---|---|---|
-| R1 *(exemplo)* | Um leitor não pode ter mais de 3 empréstimos em aberto | `EmprestimoService` | `POST /emprestimos` |
-| R2 | ... | ... | ... |
-| R3 | ... | ... | ... |
+| R1 | Não pode existir dois bois com o mesmo número de microchip | `BoiService` | `POST /bois` |
+| R2 | Um piquete não pode receber mais bois ativos do que a sua capacidade máxima | `BoiService` e `MovimentacaoService` | `POST /bois`, `POST /movimentacoes` |
+| R3 | Só um boi com status `ATIVO` pode ser pesado, movimentado ou receber baixa | `PesagemService`, `MovimentacaoService` e `BoiService` | `POST /pesagens`, `POST /movimentacoes`, `PATCH /bois/{id}/baixa` |
+| R4 | Um boi só pode ser baixado como `VENDIDO` ou `ABATIDO` se tiver ao menos uma pesagem registrada | `BoiService` | `PATCH /bois/{id}/baixa` |
 
-**Fora do escopo:** {{o que o grupo decidiu não fazer, para o projeto caber no semestre}}
+**Fora do escopo:** controle de vacinação/sanidade, financeiro com valores em reais, múltiplas fazendas, autenticação/login e leitor físico por hardware.
 
 ## Tecnologias
 
 | O quê | Qual |
 |---|---|
-| Linguagem | Java 25 |
+| Linguagem | Java 17 |
 | Framework | Spring Boot 3.5 (Web, Validation, Data JPA) |
-| Banco de dados | PostgreSQL 16, em Docker |
+| Banco de dados | PostgreSQL 16 (Docker) / H2 (perfil local) |
 | Migrations | Flyway |
 | Documentação da API | springdoc-openapi (Swagger UI) |
 
 ## Arquitetura
 
-A API é organizada em camadas. Uma requisição entra pelo Controller, passa pelo Service, que aplica as regras de negócio, e chega ao banco pelo Repository; a resposta faz o caminho de volta. O Mapper converte DTO em entidade e entidade em DTO.
-
-**Mapa da estrutura.** Uma linha por entidade, todas as do modelo. Em cada célula, a classe e a situação: **pronta**, **implementada** (já tem lógica), **em parte** (só uma parte das rotas) ou **montada** (criada, ligada às outras, ainda sem lógica).
+A API é organizada em camadas: Controller -> Service -> Repository / Mapper.
 
 | Entidade | Migration | Model | Repository | DTOs | Mapper | Service | Controller |
 |---|---|---|---|---|---|---|---|
-| Livro *(exemplo)* | `V1__criar_livros.sql`, pronta | `Livro`, pronta | `LivroRepository`, pronto | `LivroRequestDTO`, `LivroResponseDTO`, prontos | `LivroMapper`, implementado | `LivroService`, implementado | `LivroController`, implementado |
-| ... | ... | ... | ... | ... | ... | ... | ... |
+| Piquete | `V1__criar_piquetes.sql`, pronta | `Piquete`, pronta | `PiqueteRepository`, pronto | `PiqueteRequestDTO`, `PiqueteResponseDTO`, prontos | `PiqueteMapper`, implementado | `PiqueteService`, implementado | `PiqueteController`, implementado |
+| Boi | `V2__criar_bois.sql`, pronta | `Boi`, `StatusBoi`, pronta | `BoiRepository`, pronto | `BoiRequestDTO`, `BoiResponseDTO`, `BaixaRequestDTO`, prontos | `BoiMapper`, implementado | `BoiService` (R1, R2, R3, R4), implementado | `BoiController`, implementado |
+| Pesagem | `V3__criar_pesagens.sql`, pronta | `Pesagem`, pronta | `PesagemRepository`, pronto | `PesagemRequestDTO`, `PesagemResponseDTO`, prontos | `PesagemMapper`, implementado | `PesagemService` (R3), implementado | `PesagemController`, implementado |
+| Movimentacao | `V4__criar_movimentacoes.sql`, pronta | `Movimentacao`, pronta | `MovimentacaoRepository`, pronto | `MovimentacaoRequestDTO`, `MovimentacaoResponseDTO`, prontos | `MovimentacaoMapper`, implementado | `MovimentacaoService` (R2, R3), implementado | `MovimentacaoController`, implementado |
 
 ## Entidades
 
 | Entidade | O que representa | Como se relaciona |
 |---|---|---|
-| Livro *(exemplo)* | Um exemplar do acervo que pode ser emprestado | Aparece em vários empréstimos |
-| ... | ... | ... |
-
-Atributos, tipos e o diagrama das tabelas estão em [docs/modelo-de-dominio.md](docs/modelo-de-dominio.md).
+| Piquete | Área de pasto com capacidade máxima | Abriga vários bois; origem e destino de movimentações |
+| Boi | Animal do rebanho identificado por microchip | Alocado em um piquete; possui pesagens e movimentações |
+| Pesagem | Registro de peso de um animal em data específica | Pertence a um boi |
+| Movimentacao | Transferência de um animal de piquete | Pertence a um boi e conecta piquete origem a destino |
 
 ## Rotas
 
-### As que já funcionam
-
 | Verbo | Caminho | O que faz | Regra | Sucesso | Erros |
-|---|---|---|---|---|---|
-| `POST` *(exemplo)* | `/livros` | Cadastra um livro | Nenhuma | `201` | `400` |
-| `POST` *(exemplo)* | `/emprestimos` | Registra um empréstimo | R1 e R2 | `201` | `400`, `404` |
-| ... | ... | ... | ... | ... | ... |
-
-Exemplo de requisição *(exemplo: troque por uma rota do grupo)*:
-
-```http
-POST /livros
-Content-Type: application/json
-
-{
-  "titulo": "Dom Casmurro",
-  "isbn": "978-85-359-0277-5"
-}
-```
-
-Resposta, `201 Created`:
-
-```json
-{
-  "id": 1,
-  "titulo": "Dom Casmurro",
-  "isbn": "978-85-359-0277-5",
-  "disponivel": true
-}
-```
-
-### Erros
-
-Todo erro sai no mesmo formato. Este é o `400` de uma regra de negócio violada *(exemplo)*:
-
-```json
-{
-  "status": 400,
-  "erro": "Bad Request",
-  "mensagem": "R2: o livro já está emprestado",
-  "caminho": "/emprestimos",
-  "timestamp": "2026-10-06T19:30:00",
-  "campos": []
-}
-```
-
-Um campo inválido também devolve `400`, com a lista `campos` dizendo qual campo corrigir. Um id que não existe devolve `404`.
-
-### As planejadas
-
-Estão no contrato, mas ainda não respondem.
-
-| Recurso | O que vai fazer |
-|---|---|
-| ... | ... |
-
-O contrato completo, com todas as rotas e os DTOs, está em [docs/contrato-da-api.md](docs/contrato-da-api.md).
+|-------|---------|-----------|-------|---------|-------|
+| `POST` | `/piquetes` | Cadastra um piquete | Nenhuma | 201 | 400 |
+| `GET` | `/piquetes` | Lista os piquetes com a ocupação atual | Nenhuma | 200 | Nenhum |
+| `GET` | `/piquetes/{id}` | Busca um piquete pelo id | Nenhuma | 200 | 404 |
+| `POST` | `/bois` | Cadastra um boi em um piquete | R1 e R2 | 201 | 400, 404 |
+| `GET` | `/bois` | Lista os bois (filtros `status` e `piqueteId`) | Nenhuma | 200 | Nenhum |
+| `GET` | `/bois/{id}` | Busca um boi pelo id | Nenhuma | 200 | 404 |
+| `GET` | `/bois/microchip/{codigo}` | Busca um boi pelo microchip | Nenhuma | 200 | 404 |
+| `PATCH` | `/bois/{id}/baixa` | Registra baixa do boi (venda, abate, morte) | R3 e R4 | 200 | 400, 404 |
+| `POST` | `/pesagens` | Registra pesagem de um boi | R3 | 201 | 400, 404 |
+| `GET` | `/bois/{id}/pesagens` | Histórico de pesagens de um boi | Nenhuma | 200 | 404 |
+| `POST` | `/movimentacoes` | Move um boi para outro piquete | R2 e R3 | 201 | 400, 404 |
+| `GET` | `/bois/{id}/movimentacoes` | Histórico de movimentações de um boi | Nenhuma | 200 | 404 |
 
 ## Como executar
 
-Pré-requisitos: JDK 25, Docker Desktop aberto e Git.
-
+### Com Docker e PostgreSQL:
 ```bash
-git clone https://github.com/{{usuario}}/{{repositorio}}.git
-cd {{repositorio}}
-
-docker compose up -d          # sobe o PostgreSQL na porta 5437
-./mvnw spring-boot:run        # Windows: .\mvnw.cmd spring-boot:run
+docker compose up -d          # Sobe o banco PostgreSQL na porta 5437
+.\mvnw.cmd spring-boot:run    # Executa a aplicação Spring Boot
 ```
 
-Com a API no ar:
+### Sem Docker (usando perfil local H2 em memória):
+```bash
+.\mvnw.cmd spring-boot:run -Dspring-boot.run.profiles=local
+```
 
-| Endereço | O que é |
-|---|---|
-| <http://localhost:8080/swagger-ui.html> | Swagger UI: as rotas, com **Try it out** para enviar requisições |
-| <http://localhost:8080/v3/api-docs> | O contrato OpenAPI em JSON |
-
-Para testar as rotas, use o Swagger UI ou o **Postman**. No Postman, importe todas as rotas de uma vez: **Import** → **Link** → `http://localhost:8080/v3/api-docs`.
-
-Para parar: `Ctrl+C` na API e `docker compose stop` no banco. Para apagar o banco e rodar as migrations do zero: `docker compose down -v` e suba de novo.
+### Endereços:
+- Swagger UI: `http://localhost:8080/swagger-ui.html`
+- OpenAPI JSON: `http://localhost:8080/v3/api-docs`
 
 ## Situação do projeto
 
 | Parte | Situação |
 |---|---|
-| Desenho | {{ex.: completo: problema e regras neste README, modelo e contrato em docs/}} |
-| Estrutura | {{ex.: as 3 entidades têm migration, entidade, Repository, DTOs, Mapper, Service e Controller}} |
-| API e regras | {{ex.: as rotas de livros funcionam; R1, R2 e R3 estão implementadas}} |
-
-**Ainda não funciona:** {{as rotas planejadas que ainda não respondem}}
+| Desenho | Completo: modelo em `docs/modelo-de-dominio.md` e contrato em `docs/contrato-da-api.md` |
+| Estrutura | 4 entidades completas (Migration, Model, Repository, DTOs, Mapper, Service, Controller) |
+| API e regras | 100% implementada e testada (R1, R2, R3 e R4 ativas com testes automatizados) |
 
 ## Documentação
 
-| Documento | O que tem |
-|---|---|
-| [Modelo de domínio](docs/modelo-de-dominio.md) | Entidades, relacionamentos, diagrama das tabelas, migrations |
-| [Contrato da API](docs/contrato-da-api.md) | Todas as rotas, os DTOs, exemplos de JSON e erros |
-| [Autoavaliação](docs/autoavaliacao.md) | Os critérios da revisão do código, marcados pelo grupo |
+- [Modelo de domínio](docs/modelo-de-dominio.md)
+- [Contrato da API](docs/contrato-da-api.md)
+- [Passo a passo e testes](docs/passo-a-passo.md)
+- [Autoavaliação](docs/autoavaliacao.md)
