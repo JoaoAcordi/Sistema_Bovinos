@@ -1,7 +1,5 @@
 # Contrato da API
 
-> O contrato é o que o cliente da API enxerga: rotas, JSON e status. Desenhe as rotas de **todas** as entidades. Nesta etapa precisam funcionar as três da API simples e as que as regras de negócio usam. As linhas marcadas com *(exemplo)* mostram o nível de detalhe esperado: apague e escreva as do grupo.
-
 ## Convenções
 
 | Item | Valor |
@@ -9,100 +7,123 @@
 | Endereço base | `http://localhost:8080` |
 | Formato | JSON, na requisição e na resposta |
 | Datas | `yyyy-MM-dd` |
-| Erros | Sempre no formato `ErroDTO` (ver [Erros](#erros)) |
+| Erros | Sempre no formato `ErroDTO` |
 | Documentação viva | `http://localhost:8080/swagger-ui.html` |
 
 ## Rotas
 
-Coluna **Funciona**: `sim` para as rotas que já respondem nesta etapa: as da API simples e as que as regras de negócio usam.
-
-### Livros *(exemplo)*
+### Piquetes
 
 | Verbo | Caminho | O que faz | Entrada | Saída | Sucesso | Erros | Funciona |
 |---|---|---|---|---|---|---|---|
-| `GET` | `/livros` | Lista os livros | Nenhuma | lista de `LivroResponseDTO` | `200` | Nenhum | sim |
-| `GET` | `/livros/{id}` | Busca um livro | Nenhuma | `LivroResponseDTO` | `200` | `404` | sim |
-| `POST` | `/livros` | Cadastra um livro | `LivroRequestDTO` | `LivroResponseDTO` | `201` | `400` | sim |
-| `PUT` | `/livros/{id}` | Atualiza um livro | `LivroRequestDTO` | `LivroResponseDTO` | `200` | `400`, `404` | não |
-| `DELETE` | `/livros/{id}` | Remove um livro | Nenhuma | Nenhuma (sem corpo) | `204` | `404` | não |
+| `POST` | `/piquetes` | Cadastra um piquete | `PiqueteRequestDTO` | `PiqueteResponseDTO` | `201` | `400` | sim |
+| `GET` | `/piquetes` | Lista os piquetes com a ocupação atual | Nenhuma | lista de `PiqueteResponseDTO` | `200` | Nenhum | sim |
+| `GET` | `/piquetes/{id}` | Busca um piquete por ID | Nenhuma | `PiqueteResponseDTO` | `200` | `404` | sim |
 
-### {{Recurso 2}}
+### Bois
 
 | Verbo | Caminho | O que faz | Entrada | Saída | Sucesso | Erros | Funciona |
 |---|---|---|---|---|---|---|---|
-| ... | ... | ... | ... | ... | ... | ... | não |
+| `POST` | `/bois` | Cadastra um boi em um piquete (regras R1 e R2) | `BoiRequestDTO` | `BoiResponseDTO` | `201` | `400`, `404` | sim |
+| `GET` | `/bois` | Lista os bois (filtros opcionais `status` e `piqueteId`) | Query params | lista de `BoiResponseDTO` | `200` | Nenhum | sim |
+| `GET` | `/bois/{id}` | Busca um boi pelo id | Nenhuma | `BoiResponseDTO` | `200` | `404` | sim |
+| `GET` | `/bois/microchip/{codigo}` | Busca um boi pelo microchip | Nenhuma | `BoiResponseDTO` | `200` | `404` | sim |
+| `PATCH` | `/bois/{id}/baixa` | Registra baixa do boi (regras R3 e R4) | `BaixaRequestDTO` | `BoiResponseDTO` | `200` | `400`, `404` | sim |
+| `GET` | `/bois/{id}/pesagens` | Lista histórico de pesagens | Nenhuma | lista de `PesagemResponseDTO` | `200` | `404` | sim |
+| `GET` | `/bois/{id}/movimentacoes` | Lista histórico de movimentações | Nenhuma | lista de `MovimentacaoResponseDTO` | `200` | `404` | sim |
 
-### {{Recurso 3}}
+### Pesagens e Movimentações
 
-| Verbo | Caminho | O que faz | Entrada | Saída | Sucesso | Erros | Funciona |
-|---|---|---|---|---|---|---|---|
-| ... | ... | ... | ... | ... | ... | ... | não |
-
-### Rotas que não são CRUD
-
-As que nascem das regras de negócio do README. Estas precisam funcionar nesta etapa.
-
-| Verbo | Caminho | O que faz | Regra | Sucesso | Erros |
-|---|---|---|---|---|---|
-| `POST` *(exemplo)* | `/emprestimos` | Registra um empréstimo e tira o livro da estante | R1 e R2 | `201` | `400`, `404` |
-| `PUT` *(exemplo)* | `/emprestimos/{id}/devolver` | Registra a devolução e libera o livro | R3 | `200` | `400`, `404` |
-| ... | ... | ... | ... | ... | ... |
+| Verbo | Caminho | O que faz | Regra | Sucesso | Erros | Funciona |
+|---|---|---|---|---|---|---|
+| `POST` | `/pesagens` | Registra a pesagem de um animal | R3 (apenas animal ATIVO) | `201` | `400`, `404` | sim |
+| `POST` | `/movimentacoes` | Move um boi para outro piquete | R2 (capacidade do destino) e R3 (animal ATIVO) | `201` | `400`, `404` | sim |
 
 ## DTOs
 
-O que entra não é igual ao que sai: o cliente não envia `id` nem campos que a API decide.
-
 | DTO | Direção | Campos | Validações |
 |---|---|---|---|
-| `LivroRequestDTO` *(exemplo)* | entrada | `titulo`, `isbn` | os dois obrigatórios (`@NotBlank`) |
-| `LivroResponseDTO` *(exemplo)* | saída | `id`, `titulo`, `isbn`, `disponivel` | Nenhuma |
-| ... | ... | ... | ... |
+| `PiqueteRequestDTO` | entrada | `nome`, `capacidadeMaxima` | `nome` (@NotBlank), `capacidadeMaxima` (@NotNull, @Min(1)) |
+| `PiqueteResponseDTO` | saída | `id`, `nome`, `capacidadeMaxima`, `ocupacaoAtual` | Nenhuma |
+| `BoiRequestDTO` | entrada | `microchip`, `raca`, `dataNascimento`, `piqueteId` | `microchip` (@NotBlank), `raca` (@NotBlank), `dataNascimento` (@NotNull, @PastOrPresent), `piqueteId` (@NotNull) |
+| `BoiResponseDTO` | saída | `id`, `microchip`, `raca`, `dataNascimento`, `status`, `piqueteId`, `piqueteNome` | Nenhuma |
+| `BaixaRequestDTO` | entrada | `novoStatus`, `motivo` | `novoStatus` (@NotNull), `motivo` (@NotBlank) |
+| `PesagemRequestDTO` | entrada | `boiId`, `peso`, `dataPesagem` | `boiId` (@NotNull), `peso` (@NotNull, @Positive), `dataPesagem` (@NotNull, @PastOrPresent) |
+| `PesagemResponseDTO` | saída | `id`, `boiId`, `microchip`, `peso`, `dataPesagem` | Nenhuma |
+| `MovimentacaoRequestDTO` | entrada | `boiId`, `piqueteDestinoId`, `dataMovimentacao`, `motivo` | `boiId` (@NotNull), `piqueteDestinoId` (@NotNull), `dataMovimentacao` (@NotNull, @PastOrPresent), `motivo` (@NotBlank) |
+| `MovimentacaoResponseDTO` | saída | `id`, `boiId`, `microchip`, `piqueteOrigemId`, `piqueteOrigemNome`, `piqueteDestinoId`, `piqueteDestinoNome`, `dataMovimentacao`, `motivo` | Nenhuma |
 
 ## Exemplos
 
-Um par requisição/resposta por entidade.
-
-### `POST /livros` *(exemplo)*
+### `POST /piquetes`
 
 Requisição:
-
 ```json
 {
-  "titulo": "Dom Casmurro",
-  "isbn": "978-85-359-0277-5"
+  "nome": "Pasto da Sede",
+  "capacidadeMaxima": 50
 }
 ```
 
-Resposta, `201 Created`:
-
+Resposta `201 Created`:
 ```json
 {
   "id": 1,
-  "titulo": "Dom Casmurro",
-  "isbn": "978-85-359-0277-5",
-  "disponivel": true
+  "nome": "Pasto da Sede",
+  "capacidadeMaxima": 50,
+  "ocupacaoAtual": 0
+}
+```
+
+### `POST /bois`
+
+Requisição:
+```json
+{
+  "microchip": "982000123456789",
+  "raca": "Nelore",
+  "dataNascimento": "2024-03-15",
+  "piqueteId": 1
+}
+```
+
+Resposta `201 Created`:
+```json
+{
+  "id": 1,
+  "microchip": "982000123456789",
+  "raca": "Nelore",
+  "dataNascimento": "2024-03-15",
+  "status": "ATIVO",
+  "piqueteId": 1,
+  "piqueteNome": "Pasto da Sede"
 }
 ```
 
 ## Erros
 
-Todo erro sai no mesmo formato. Este é o `404` de `GET /livros/999`:
+Todo erro sai no formato padronizado `ErroDTO`:
 
+### Exemplo 400 (Regra de Negócio Violada)
 ```json
 {
-  "status": 404,
-  "erro": "Not Found",
-  "mensagem": "Livro não encontrado: 999",
-  "caminho": "/livros/999",
-  "timestamp": "2026-10-06T19:30:00",
+  "status": 400,
+  "erro": "Bad Request",
+  "mensagem": "R2: o piquete Pasto da Sede já está na capacidade máxima (50)",
+  "caminho": "/bois",
+  "timestamp": "2026-10-26T00:15:00",
   "campos": []
 }
 ```
 
-No `400` de validação, a lista `campos` traz um item por campo inválido: `{"campo": "titulo", "mensagem": "Título é obrigatório"}`.
-
-| Status | Quando acontece neste projeto |
-|---|---|
-| `400` | JSON ilegível ou campo inválido no DTO de entrada |
-| `404` | Id que não existe |
-| `400` | Regra de negócio violada: a `mensagem` diz qual regra barrou o pedido |
+### Exemplo 404 (Recurso Não Encontrado)
+```json
+{
+  "status": 404,
+  "erro": "Not Found",
+  "mensagem": "Boi não encontrado: 999",
+  "caminho": "/bois/999",
+  "timestamp": "2026-10-26T00:15:00",
+  "campos": []
+}
+```
