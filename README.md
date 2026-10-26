@@ -87,7 +87,6 @@ O passo a passo com o código de cada peça está em [docs/passo-a-passo.md](doc
 | Pesagem | Um registro de peso de um boi em uma data | Pertence a um boi |
 | Movimentacao | A troca de um boi de um piquete para outro | Pertence a um boi; liga um piquete de origem a um de destino |
 
-Atributos, tipos e o diagrama das tabelas estão em [docs/modelo-de-dominio.md](docs/modelo-de-dominio.md).
 
 ## Rotas
 
@@ -158,8 +157,6 @@ Estão no contrato, mas ainda não respondem.
 | GET | `/bois/{id}/pesagens` | Lista o histórico de pesagens de um boi | Nenhuma | 200 | 404 |
 | POST | `/movimentacoes` | Move um boi para outro piquete | R2 e R3 | 201 | 400, 404 |
 | GET | `/bois/{id}/movimentacoes` | Lista o histórico de movimentações de um boi | Nenhuma | 200 | 404 |
-
-O contrato completo, com todas as rotas e os DTOs, está em [docs/contrato-da-api.md](docs/contrato-da-api.md).
 
 ## Como executar
 
