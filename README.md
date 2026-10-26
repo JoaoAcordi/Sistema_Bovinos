@@ -76,8 +76,6 @@ A API é organizada em camadas. Uma requisição entra pelo Controller, passa pe
 | Pesagem | `V3__criar_pesagens.sql`, a fazer | `Pesagem`, a fazer | `PesagemRepository`, a fazer | `PesagemRequestDTO`, `PesagemResponseDTO`, a fazer | `PesagemMapper`, a fazer | `PesagemService` (R3), a fazer | `PesagemController`, a fazer |
 | Movimentacao | `V4__criar_movimentacoes.sql`, a fazer | `Movimentacao`, a fazer | `MovimentacaoRepository`, a fazer | `MovimentacaoRequestDTO`, `MovimentacaoResponseDTO`, a fazer | `MovimentacaoMapper`, a fazer | `MovimentacaoService` (R2, R3), a fazer | `MovimentacaoController`, a fazer |
 
-O passo a passo com o código de cada peça está em [docs/passo-a-passo.md](docs/passo-a-passo.md).
-
 ## Entidades
 
 | Entidade | O que representa | Como se relaciona |
@@ -160,7 +158,7 @@ Estão no contrato, mas ainda não respondem.
 
 ## Como executar
 
-**Pré-requisitos:** JDK 25, Docker Desktop aberto e Git.
+**Pré-requisitos:** JDK 17, Docker Desktop aberto e Git.
 
 ```bash
 git clone https://github.com/{{usuario}}/{{repositorio}}.git
