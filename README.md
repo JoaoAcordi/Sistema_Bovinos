@@ -57,8 +57,8 @@ Apesar dessa importância, em muitas propriedades o acompanhamento ainda depende
 
 | O quê | Qual |
 |-------|------|
-| Linguagem | Java 25 |
-| Framework | Spring Boot 3.5 (Web, Validation, Data JPA) |
+| Linguagem | Java 17 |
+| Framework | Spring Boot 3 (Web, Validation, Data JPA) |
 | Banco de dados | PostgreSQL 16, em Docker |
 | Migrations | Flyway |
 | Documentação da API | springdoc-openapi (Swagger UI) |
